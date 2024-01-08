@@ -1,0 +1,9 @@
+sum を 0 にする。
+counter を 1 にする。
+
+do {
+  sum を sum + counter にする。
+  counter を counter + 1 にする。
+} while ( counter は 10 以下 )
+
+sum を出力する。
