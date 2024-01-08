@@ -21,10 +21,10 @@ typedef struct Pacman {
   int score;
 } Pacman;
 
-typedef struct Box {
+typedef struct Object {
   double x, y;
   double w, h;
-} Box;
+} Object;
 
 void packKeyIn(Pacman *pac) {
   hgevent *event = HgEventNonBlocking();
@@ -103,7 +103,7 @@ void pacDraw(Pacman *pac) {
   }
 }
 
-void drawBox(Box *box) {
+void drawBox(Object *box) {
   HgWSetFillColor(lid, HG_BLUE);
   HgWBoxFill(lid, box->x, box->y, box->w, box->h, 0);
 }
@@ -131,7 +131,7 @@ int hitWall(Pacman *pac) {
   return 0;
 }
 
-int hitBox(Box *box, Pacman *pac) {
+int hitBox(Object *box, Pacman *pac) {
 
   double boxCenterX = box->x + box->w / 2;
   double boxCenterY = box->y + box->h / 2;
@@ -159,7 +159,7 @@ int main() {
   srandom(time(NULL));
 
   struct Pacman pac = {0, 0, PAC_SIZE, PAC_STEP, 0.0, 0};
-  struct Box boxes[BOX_COUNT] = {};
+  struct Object boxes[BOX_COUNT] = {};
 
   int baseSize = PAC_SIZE * 2;
 
@@ -175,9 +175,7 @@ int main() {
     int boxHit = 0;
 
     for (int i = 0; i < BOX_COUNT; i++) {
-      struct Box box = {0, 0, 0, 0};
-
-      printf("%d\n", (int)(WIN_SIZE / baseSize));
+      struct Object box = {0, 0, 0, 0};
 
       box.w = randInt(1, 2) * baseSize;
       box.h = randInt(1, 2) * baseSize;
