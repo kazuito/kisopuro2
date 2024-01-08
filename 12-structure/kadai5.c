@@ -12,6 +12,8 @@
 #define BOX_COUNT 5
 #define PENALTY 100
 
+int lid;
+
 typedef struct Pacman {
   double x, y;
   double size;
@@ -77,46 +79,46 @@ void packKeyIn(Pacman *pac) {
     pac->score += 3;
 }
 
-void pacMove(Pacman* pac) {
+void pacMove(Pacman *pac) {
   pac->x += pac->dx;
   pac->y += pac->dy;
 }
 
-void pacDraw(Pacman * pac) {
-  HgSetColor(HG_RED);
-  HgSetFillColor(HG_RED);
+void pacDraw(Pacman *pac) {
+  HgWSetColor(lid, HG_RED);
+  HgWSetFillColor(lid, HG_RED);
 
   if (pac->dx < 0.0) {
-    HgFanFill(pac->x, pac->y, pac->size, 1.25 * M_PI, 0.75 * M_PI, 0);
+    HgWFanFill(lid, pac->x, pac->y, pac->size, 1.25 * M_PI, 0.75 * M_PI, 0);
   } else {
-    HgFanFill(pac->x, pac->y, pac->size, 0.25 * M_PI, 3.75 * M_PI, 0);
+    HgWFanFill(lid, pac->x, pac->y, pac->size, 0.25 * M_PI, 3.75 * M_PI, 0);
   }
 
-  HgSetFillColor(HG_WHITE);
+  HgWSetFillColor(lid, HG_WHITE);
 
   if (pac->dx < 0.0) {
-    HgCircleFill(pac->x + pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
+    HgWCircleFill(lid, pac->x + pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
   } else {
-    HgCircleFill(pac->x - pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
+    HgWCircleFill(lid, pac->x - pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
   }
 }
 
 void drawBox(Box *box) {
-  HgSetFillColor(HG_GRAY);
-  HgRectFill(box->x, box->y, box->w / 2, box->h / 2, 0, 0);
+  HgWSetFillColor(lid, HG_GRAY);
+  HgWRectFill(lid, box->x, box->y, box->w / 2, box->h / 2, 0, 0);
 }
 
 void drawScore(int score) {
-  HgSetColor(HG_BLACK);
-  HgText(12, WIN_SIZE - 24, "SCORE: %d", score);
+  HgWSetColor(lid, HG_BLACK);
+  HgWText(lid, 12, WIN_SIZE - 24, "SCORE: %d", score);
 }
 
 void drawFailMessage() {
   HgSetColor(HG_RED);
-  HgText(180.0, 120.0, "FAIL");
+  HgText( 180.0, 120.0, "FAIL");
 }
 
-int hitWall(Pacman* pac) {
+int hitWall(Pacman *pac) {
   if (((pac->x < pac->size) || (WIN_SIZE - pac->size < pac->x)) ||
       ((pac->y < pac->size) || (WIN_SIZE - pac->size < pac->y))) {
     return 1;
@@ -141,6 +143,8 @@ int randInt(int min, int max) {
 int main() {
   HgOpen(WIN_SIZE, WIN_SIZE);
   HgSetEventMask(HG_KEY_DOWN);
+
+  doubleLayer layers = HgWAddDoubleLayer(0);
 
   srandom(time(NULL));
 
@@ -180,7 +184,8 @@ int main() {
 
   // メインループ
   while (1) {
-    HgClear();
+    lid = HgLSwitch(&layers);
+    HgLClear(lid);
 
     int hit = 0;
 
@@ -224,6 +229,5 @@ int main() {
   HgGetChar();
 
   HgClose();
-
   return 0;
 }
