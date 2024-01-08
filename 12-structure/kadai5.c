@@ -24,7 +24,7 @@ typedef struct Box {
   double w, h;
 } Box;
 
-Pacman packKeyIn(Pacman pac) {
+void packKeyIn(Pacman *pac) {
   hgevent *event = HgEventNonBlocking();
 
   int penalty = 0;
@@ -33,81 +33,77 @@ Pacman packKeyIn(Pacman pac) {
       event->type == HG_KEY_DOWN) {
     switch (event->ch) {
       case 'i':
-        if (pac.dy < 0)
+        if (pac->dy < 0)
           penalty = PENALTY * 10;
-        else if (fabs(pac.dx) > 0)
+        else if (fabs(pac->dx) > 0)
           penalty = PENALTY;
 
-        pac.dx = 0.0;
-        pac.dy = PAC_STEP;
+        pac->dx = 0.0;
+        pac->dy = PAC_STEP;
         break;
       case 'k':
-        if (pac.dy > 0)
+        if (pac->dy > 0)
           penalty = PENALTY * 10;
-        else if (fabs(pac.dx) > 0)
+        else if (fabs(pac->dx) > 0)
           penalty = PENALTY;
 
-        pac.dx = 0.0;
-        pac.dy = -PAC_STEP;
+        pac->dx = 0.0;
+        pac->dy = -PAC_STEP;
         break;
       case 'j':
-        if (pac.dx > 0)
+        if (pac->dx > 0)
           penalty = PENALTY * 10;
-        else if (fabs(pac.dy) > 0)
+        else if (fabs(pac->dy) > 0)
           penalty = PENALTY;
 
-        pac.dx = -PAC_STEP;
-        pac.dy = 0.0;
+        pac->dx = -PAC_STEP;
+        pac->dy = 0.0;
         break;
       case 'l':
-        if (pac.dx < 0)
+        if (pac->dx < 0)
           penalty = PENALTY * 10;
-        else if (fabs(pac.dy) > 0)
+        else if (fabs(pac->dy) > 0)
           penalty = PENALTY;
 
-        pac.dx = PAC_STEP;
-        pac.dy = 0.0;
+        pac->dx = PAC_STEP;
+        pac->dy = 0.0;
         break;
     }
   }
 
   if (penalty > 0)
-    pac.score -= penalty;
+    pac->score -= penalty;
   else
-    pac.score += 3;
-
-  return pac;
+    pac->score += 3;
 }
 
-Pacman pacMove(Pacman pac) {
-  pac.x += pac.dx;
-  pac.y += pac.dy;
-
-  return pac;
+void pacMove(Pacman* pac) {
+  pac->x += pac->dx;
+  pac->y += pac->dy;
 }
 
-void pacDraw(Pacman pac) {
+void pacDraw(Pacman * pac) {
   HgSetColor(HG_RED);
   HgSetFillColor(HG_RED);
 
-  if (pac.dx < 0.0) {
-    HgFanFill(pac.x, pac.y, pac.size, 1.25 * M_PI, 0.75 * M_PI, 0);
+  if (pac->dx < 0.0) {
+    HgFanFill(pac->x, pac->y, pac->size, 1.25 * M_PI, 0.75 * M_PI, 0);
   } else {
-    HgFanFill(pac.x, pac.y, pac.size, 0.25 * M_PI, 3.75 * M_PI, 0);
+    HgFanFill(pac->x, pac->y, pac->size, 0.25 * M_PI, 3.75 * M_PI, 0);
   }
 
   HgSetFillColor(HG_WHITE);
 
-  if (pac.dx < 0.0) {
-    HgCircleFill(pac.x + pac.size / 3.0, pac.y + pac.size / 2.0, pac.size / 4.0, 0);
+  if (pac->dx < 0.0) {
+    HgCircleFill(pac->x + pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
   } else {
-    HgCircleFill(pac.x - pac.size / 3.0, pac.y + pac.size / 2.0, pac.size / 4.0, 0);
+    HgCircleFill(pac->x - pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
   }
 }
 
-void drawBox(Box box) {
+void drawBox(Box *box) {
   HgSetColor(HG_BLACK);
-  HgRect(box.x, box.y, box.w / 2, box.h / 2, 0);
+  HgRect(box->x, box->y, box->w / 2, box->h / 2, 0);
 }
 
 void drawScore(int score) {
@@ -120,18 +116,18 @@ void drawFailMessage() {
   HgText(180.0, 120.0, "FAIL");
 }
 
-int hitWall(Pacman pac) {
-  if (((pac.x < pac.size) || (WIN_SIZE - pac.size < pac.x)) ||
-      ((pac.y < pac.size) || (WIN_SIZE - pac.size < pac.y))) {
+int hitWall(Pacman* pac) {
+  if (((pac->x < pac->size) || (WIN_SIZE - pac->size < pac->x)) ||
+      ((pac->y < pac->size) || (WIN_SIZE - pac->size < pac->y))) {
     return 1;
   }
 
   return 0;
 }
 
-int hitBox(Box box, Pacman pac) {
-  if (PAC_SIZE / 2 + box.w / 2 > fabs(box.x - pac.x) &&
-      PAC_SIZE / 2 + box.h / 2 > fabs(box.y - pac.y)) {
+int hitBox(Box *box, Pacman *pac) {
+  if (PAC_SIZE / 2 + box->w / 2 > fabs(box->x - pac->x) &&
+      PAC_SIZE / 2 + box->h / 2 > fabs(box->y - pac->y)) {
     return 1;
   }
 
@@ -156,7 +152,7 @@ int main() {
     pac.x = randInt(0, 400);
     pac.y = randInt(0, 400);
 
-    if (hitWall(pac)) {
+    if (hitWall(&pac)) {
       continue;
     }
 
@@ -170,7 +166,7 @@ int main() {
       box.x = randInt(0 + box.w / 2, 400 - box.w / 2);
       box.y = randInt(0 + box.h / 2, 400 - box.h / 2);
 
-      boxHit = hitBox(box, pac);
+      boxHit = hitBox(&box, &pac);
 
       if (boxHit) break;
 
@@ -188,27 +184,27 @@ int main() {
 
     int hit = 0;
 
-    pac = packKeyIn(pac);
-    pac = pacMove(pac);
+    packKeyIn(&pac);
+    pacMove(&pac);
 
     // pacを描画
-    pacDraw(pac);
+    pacDraw(&pac);
 
     // boxを描画
     for (int i = 0; i < BOX_COUNT; i++) {
-      drawBox(boxes[i]);
+      drawBox(&boxes[i]);
     }
 
     // scoreを描画
     drawScore(pac.score);
 
     // 壁との当たり判定
-    if (hitWall(pac)) {
+    if (hitWall(&pac)) {
       hit++;
     } else {
       // boxとの当たり判定
       for (int i = 0; i < BOX_COUNT; i++) {
-        if (hitBox(boxes[i], pac)) {
+        if (hitBox(&boxes[i], &pac)) {
           hit++;
           break;
         }
