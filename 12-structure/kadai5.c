@@ -86,7 +86,7 @@ void pacMove(Pacman *pac) {
 
 void pacDraw(Pacman *pac) {
   HgWSetColor(lid, HG_RED);
-  HgWSetFillColor(lid, HG_RED);
+  HgWSetFillColor(lid, 0xffff00UL);
 
   if (pac->dx < 0.0) {
     HgWFanFill(lid, pac->x, pac->y, pac->size, 1.25 * M_PI, 0.75 * M_PI, 0);
@@ -94,7 +94,7 @@ void pacDraw(Pacman *pac) {
     HgWFanFill(lid, pac->x, pac->y, pac->size, 0.25 * M_PI, 3.75 * M_PI, 0);
   }
 
-  HgWSetFillColor(lid, HG_WHITE);
+  HgWSetFillColor(lid, HG_BLACK);
 
   if (pac->dx < 0.0) {
     HgWCircleFill(lid, pac->x + pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
@@ -104,17 +104,17 @@ void pacDraw(Pacman *pac) {
 }
 
 void drawBox(Box *box) {
-  HgWSetFillColor(lid, HG_GRAY);
+  HgWSetFillColor(lid, HG_BLUE);
   HgWRectFill(lid, box->x, box->y, box->w / 2, box->h / 2, 0, 0);
 }
 
 void drawScore(int score) {
-  HgWSetColor(lid, HG_BLACK);
+  HgWSetColor(lid, HG_WHITE);
   HgWText(lid, 12, WIN_SIZE - 24, "SCORE: %d", score);
 }
 
 void drawFailMessage() {
-  HgSetColor(HG_RED);
+  HgSetColor(HG_WHITE);
   HgText( 180.0, 120.0, "FAIL");
 }
 
@@ -143,6 +143,8 @@ int randInt(int min, int max) {
 int main() {
   HgOpen(WIN_SIZE, WIN_SIZE);
   HgSetEventMask(HG_KEY_DOWN);
+  HgWSetFillColor(0, HG_BLACK);
+  HgWBoxFill(0,0, 0, WIN_SIZE, WIN_SIZE, 0);
 
   doubleLayer layers = HgWAddDoubleLayer(0);
 
@@ -224,7 +226,7 @@ int main() {
     HgSleep(0.05);
   }
 
-  HgSetColor(HG_RED);
+  HgSetColor(HG_WHITE);
   HgText(180.0, 160.0, "END");
   HgGetChar();
 
