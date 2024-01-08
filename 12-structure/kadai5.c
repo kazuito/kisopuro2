@@ -13,18 +13,18 @@
 #define PENALTY 100
 
 int lid;
+int baseSize = PAC_SIZE * 2;
+
+typedef struct Rect {
+  double x, y;
+  double w, h;
+} Rect;
 
 typedef struct Pacman {
-  double x, y;
-  double size;
+  Rect rect;
   double dx, dy;
   int score;
 } Pacman;
-
-typedef struct Object {
-  double x, y;
-  double w, h;
-} Object;
 
 void packKeyIn(Pacman *pac) {
   hgevent *event = HgEventNonBlocking();
@@ -80,32 +80,37 @@ void packKeyIn(Pacman *pac) {
 }
 
 void pacMove(Pacman *pac) {
-  pac->x += pac->dx;
-  pac->y += pac->dy;
+  pac->rect.x += pac->dx;
+  pac->rect.y += pac->dy;
 }
 
 void pacDraw(Pacman *pac) {
   HgWSetColor(lid, HG_RED);
-  HgWSetFillColor(lid, 0xffff00UL);
+  HgWSetFillColor(lid, HG_YELLOW);
 
   if (pac->dx < 0.0) {
-    HgWFanFill(lid, pac->x, pac->y, pac->size, 1.25 * M_PI, 0.75 * M_PI, 0);
+    HgWFanFill(lid, pac->rect.x, pac->rect.y, pac->rect.w, 1.25 * M_PI, 0.75 * M_PI, 0);
   } else {
-    HgWFanFill(lid, pac->x, pac->y, pac->size, 0.25 * M_PI, 3.75 * M_PI, 0);
+    HgWFanFill(lid, pac->rect.x, pac->rect.y, pac->rect.w, 0.25 * M_PI, 3.75 * M_PI, 0);
   }
 
   HgWSetFillColor(lid, HG_BLACK);
 
   if (pac->dx < 0.0) {
-    HgWCircleFill(lid, pac->x + pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
+    HgWCircleFill(lid, pac->rect.x + pac->rect.w / 3.0, pac->rect.y + pac->rect.w / 2.0, pac->rect.w / 4.0, 0);
   } else {
-    HgWCircleFill(lid, pac->x - pac->size / 3.0, pac->y + pac->size / 2.0, pac->size / 4.0, 0);
+    HgWCircleFill(lid, pac->rect.x - pac->rect.w / 3.0, pac->rect.y + pac->rect.w / 2.0, pac->rect.w / 4.0, 0);
   }
 }
 
-void drawBox(Object *box) {
+void drawBox(Rect *box) {
   HgWSetFillColor(lid, HG_BLUE);
   HgWBoxFill(lid, box->x, box->y, box->w, box->h, 0);
+}
+
+void drawBall(Rect *ball) {
+  HgWSetFillColor(lid, HG_YELLOW);
+  HgWCircleFill(lid, ball->x - ball->w / 2, ball->y - ball->h / 2, ball->w * 0.8 / 2, 0);
 }
 
 void drawScore(int score) {
@@ -122,22 +127,35 @@ void drawFailMessage() {
   HgText(180.0, 120.0, "FAIL");
 }
 
-int hitWall(Pacman *pac) {
-  if (((pac->x < pac->size) || (WIN_SIZE - pac->size < pac->x)) ||
-      ((pac->y < pac->size) || (WIN_SIZE - pac->size < pac->y))) {
+int hitWall(Rect *rect) {
+  if (((rect->x < rect->w) || (WIN_SIZE - rect->w < rect->x)) ||
+      ((rect->y < rect->h) || (WIN_SIZE - rect->h < rect->y))) {
     return 1;
   }
 
   return 0;
 }
 
-int hitBox(Object *box, Pacman *pac) {
-
+int hitBox(Rect *box, Pacman *pac) {
   double boxCenterX = box->x + box->w / 2;
   double boxCenterY = box->y + box->h / 2;
 
-  if (PAC_SIZE / 2 + box->w / 2 > fabs(boxCenterX - pac->x) &&
-      PAC_SIZE / 2 + box->h / 2 > fabs(boxCenterY - pac->y)) {
+  if (PAC_SIZE / 2 + box->w / 2 > fabs(boxCenterX - pac->rect.x) &&
+      PAC_SIZE / 2 + box->h / 2 > fabs(boxCenterY - pac->rect.y)) {
+    return 1;
+  }
+
+  return 0;
+}
+
+int rectHit(Rect *r1, Rect *r2) {
+  double r1CenterX = r1->x + r1->w / 2;
+  double r1CenterY = r1->y + r1->h / 2;
+  double r2CenterX = r2->x + r2->w / 2;
+  double r2CenterY = r2->y + r2->h / 2;
+
+  if (r1->w / 2 + r2->w / 2 > fabs(r1CenterX - r2CenterX) &&
+      r1->h / 2 + r2->h / 2 > fabs(r1CenterY - r2CenterY)) {
     return 1;
   }
 
@@ -146,6 +164,36 @@ int hitBox(Object *box, Pacman *pac) {
 
 int randInt(int min, int max) {
   return random() % (max - min + 1) + min;
+}
+
+Rect generateBall(Rect boxes[BOX_COUNT]) {
+  Rect ball = {0, 0, 0, 0};
+
+  while (1) {
+    int collision = 0;
+
+    ball.w = baseSize;
+    ball.h = baseSize;
+    ball.x = randInt(0, (int)(WIN_SIZE / baseSize)) * baseSize;
+    ball.y = randInt(0, (int)(WIN_SIZE / baseSize)) * baseSize;
+
+    if (hitWall(&ball)) {
+      continue;
+    }
+
+    for (int i = 0; i < BOX_COUNT; i++) {
+      if (rectHit(&ball, &boxes[i])) {
+        collision = 1;
+        break;
+      }
+    }
+
+    if (!collision) {
+      break;
+    }
+  }
+
+  return ball;
 }
 
 int main() {
@@ -158,24 +206,22 @@ int main() {
 
   srandom(time(NULL));
 
-  struct Pacman pac = {0, 0, PAC_SIZE, PAC_STEP, 0.0, 0};
-  struct Object boxes[BOX_COUNT] = {};
-
-  int baseSize = PAC_SIZE * 2;
+  struct Pacman pac = {{0, 0, PAC_SIZE, PAC_SIZE}, PAC_STEP, 0.0, 0};
+  struct Rect boxes[BOX_COUNT] = {};
 
   // pacとboxの初期位置を決める
   while (1) {
-    pac.x = randInt(0, 400);
-    pac.y = randInt(0, 400);
+    pac.rect.x = randInt(0, 400);
+    pac.rect.y = randInt(0, 400);
 
-    if (hitWall(&pac)) {
+    if (hitWall(&pac.rect)) {
       continue;
     }
 
     int boxHit = 0;
 
     for (int i = 0; i < BOX_COUNT; i++) {
-      struct Object box = {0, 0, 0, 0};
+      struct Rect box = {0, 0, 0, 0};
 
       box.w = randInt(1, 2) * baseSize;
       box.h = randInt(1, 2) * baseSize;
@@ -193,6 +239,8 @@ int main() {
       break;
     }
   }
+
+  struct Rect ball = generateBall(boxes);
 
   // メインループ
   while (1) {
@@ -212,11 +260,15 @@ int main() {
       drawBox(&boxes[i]);
     }
 
+    // ballを描画
+    drawBall(&ball);
+    // drawBox(&ball);
+
     // scoreを描画
     drawScore(pac.score);
 
     // 壁との当たり判定
-    if (hitWall(&pac)) {
+    if (hitWall(&pac.rect)) {
       hit++;
     } else {
       // boxとの当たり判定
@@ -226,6 +278,12 @@ int main() {
           break;
         }
       }
+    }
+
+    // ballとの当たり判定
+    if (rectHit(&ball, &pac.rect)) {
+      pac.score += 1000;
+      ball = generateBall(boxes);
     }
 
     if (hit) {
