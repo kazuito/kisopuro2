@@ -172,9 +172,7 @@ int main() {
 
       boxHit = hitBox(box, pac);
 
-      if (boxHit) {
-        break;
-      }
+      if (boxHit) break;
 
       boxes[i] = box;
     }
