@@ -9,7 +9,7 @@
 #define WIN_SIZE 400.0
 #define PAC_SIZE 10.0
 #define PAC_STEP 4.0
-#define BOX_COUNT 5
+#define BOX_COUNT 30
 #define PENALTY 100
 
 int lid;
@@ -105,7 +105,7 @@ void pacDraw(Pacman *pac) {
 
 void drawBox(Box *box) {
   HgWSetFillColor(lid, HG_BLUE);
-  HgWRectFill(lid, box->x, box->y, box->w / 2, box->h / 2, 0, 0);
+  HgWBoxFill(lid, box->x, box->y, box->w, box->h, 0);
 }
 
 void drawScore(int score) {
@@ -132,8 +132,12 @@ int hitWall(Pacman *pac) {
 }
 
 int hitBox(Box *box, Pacman *pac) {
-  if (PAC_SIZE / 2 + box->w / 2 > fabs(box->x - pac->x) &&
-      PAC_SIZE / 2 + box->h / 2 > fabs(box->y - pac->y)) {
+
+  double boxCenterX = box->x + box->w / 2;
+  double boxCenterY = box->y + box->h / 2;
+
+  if (PAC_SIZE / 2 + box->w / 2 > fabs(boxCenterX - pac->x) &&
+      PAC_SIZE / 2 + box->h / 2 > fabs(boxCenterY - pac->y)) {
     return 1;
   }
 
@@ -157,6 +161,8 @@ int main() {
   struct Pacman pac = {0, 0, PAC_SIZE, PAC_STEP, 0.0, 0};
   struct Box boxes[BOX_COUNT] = {};
 
+  int baseSize = PAC_SIZE * 2;
+
   // pacとboxの初期位置を決める
   while (1) {
     pac.x = randInt(0, 400);
@@ -171,10 +177,12 @@ int main() {
     for (int i = 0; i < BOX_COUNT; i++) {
       struct Box box = {0, 0, 0, 0};
 
-      box.w = randInt(20, 100);
-      box.h = randInt(20, 100);
-      box.x = randInt(0 + box.w / 2, 400 - box.w / 2);
-      box.y = randInt(0 + box.h / 2, 400 - box.h / 2);
+      printf("%d\n", (int)(WIN_SIZE / baseSize));
+
+      box.w = randInt(1, 2) * baseSize;
+      box.h = randInt(1, 2) * baseSize;
+      box.x = randInt(0, (int)(WIN_SIZE / baseSize)) * baseSize;
+      box.y = randInt(0, (int)(WIN_SIZE / baseSize)) * baseSize;
 
       boxHit = hitBox(&box, &pac);
 
