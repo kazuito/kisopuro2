@@ -109,13 +109,17 @@ void drawBox(Box *box) {
 }
 
 void drawScore(int score) {
-  HgWSetColor(lid, HG_WHITE);
+  if (score < 0)
+    HgWSetColor(lid, HG_RED);
+  else
+    HgWSetColor(lid, HG_WHITE);
+
   HgWText(lid, 12, WIN_SIZE - 24, "SCORE: %d", score);
 }
 
 void drawFailMessage() {
   HgSetColor(HG_WHITE);
-  HgText( 180.0, 120.0, "FAIL");
+  HgText(180.0, 120.0, "FAIL");
 }
 
 int hitWall(Pacman *pac) {
@@ -144,7 +148,7 @@ int main() {
   HgOpen(WIN_SIZE, WIN_SIZE);
   HgSetEventMask(HG_KEY_DOWN);
   HgWSetFillColor(0, HG_BLACK);
-  HgWBoxFill(0,0, 0, WIN_SIZE, WIN_SIZE, 0);
+  HgWBoxFill(0, 0, 0, WIN_SIZE, WIN_SIZE, 0);
 
   doubleLayer layers = HgWAddDoubleLayer(0);
 
