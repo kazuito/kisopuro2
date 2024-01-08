@@ -23,6 +23,7 @@ typedef struct Pacman {
   Rect rect;
   double dx, dy;
   int score;
+  int mouseOpen;
 } Pacman;
 
 void packKeyIn(Pacman *pac) {
@@ -84,21 +85,18 @@ void pacMove(Pacman *pac) {
 }
 
 void pacDraw(Pacman *pac) {
-  HgWSetColor(lid, HG_RED);
   HgWSetFillColor(lid, HG_YELLOW);
 
-  if (pac->dx < 0.0) {
+  if (!pac->mouseOpen) {
+    HgWCircleFill(lid, pac->rect.x + pac->rect.w / 2, pac->rect.y + pac->rect.h / 2, pac->rect.w / 2, 0);
+  } else if (pac->dx < 0.0) {
     HgWFanFill(lid, pac->rect.x + pac->rect.w / 2, pac->rect.y + pac->rect.h / 2, pac->rect.w / 2, 1.25 * M_PI, 0.75 * M_PI, 0);
-  } else {
+  } else if (pac->dx > 0.0) {
     HgWFanFill(lid, pac->rect.x + pac->rect.w / 2, pac->rect.y + pac->rect.h / 2, pac->rect.w / 2, 0.25 * M_PI, 3.75 * M_PI, 0);
-  }
-
-  HgWSetFillColor(lid, HG_BLACK);
-
-  if (pac->dx < 0.0) {
-    HgWCircleFill(lid, pac->rect.x + pac->rect.w / 2 / 3.0, pac->rect.y + pac->rect.w / 2 / 2.0, pac->rect.w / 2 / 4.0, 0);
-  } else {
-    HgWCircleFill(lid, pac->rect.x - pac->rect.w / 2 / 3.0, pac->rect.y + pac->rect.w / 2 / 2.0, pac->rect.w / 2 / 4.0, 0);
+  } else if (pac->dy < 0.0) {
+    HgWFanFill(lid, pac->rect.x + pac->rect.w / 2, pac->rect.y + pac->rect.h / 2, pac->rect.w / 2, 1.75 * M_PI, 1.25 * M_PI, 0);
+  } else if (pac->dy > 0.0) {
+    HgWFanFill(lid, pac->rect.x + pac->rect.w / 2, pac->rect.y + pac->rect.h / 2, pac->rect.w / 2, 0.75 * M_PI, 0.25 * M_PI, 0);
   }
 }
 
@@ -198,10 +196,12 @@ int main() {
 
   srandom(time(NULL));
 
-  struct Pacman pac = {{0, 0, PAC_SIZE, PAC_SIZE}, PAC_STEP, 0.0, 0};
+  struct Pacman pac = {{0, 0, PAC_SIZE, PAC_SIZE}, PAC_STEP, 0.0, 0, 1};
   struct Rect boxes[BOX_COUNT] = {};
 
   while (1) {
+    pac.score = 0;
+
     // pacとboxの初期位置を決める
     while (1) {
       pac.rect.x = randInt(0, 400);
@@ -245,6 +245,12 @@ int main() {
       HgLClear(lid2);
 
       int hit = 0;
+
+      if (frameCount == 0) {
+        pac.mouseOpen = 1;
+      } else if (frameCount % 6 == 0) {
+        pac.mouseOpen = !pac.mouseOpen;
+      }
 
       packKeyIn(&pac);
       pacMove(&pac);
@@ -302,7 +308,7 @@ int main() {
     HgWSetColor(lid2, HG_WHITE);
     HgWSetFont(lid2, HG_GB, 12.0);
     HgWText(lid2, 127.0, 180.0, "TYPE ANY KEY TO RETRY");
-    HgSleep(0.5);
+    HgSleep(0.0333);
     HgEvent();
   }
 
