@@ -12,7 +12,7 @@
 #define BOX_COUNT 30
 #define PENALTY 100
 
-int lid;
+int lid, lid2;
 
 typedef struct Rect {
   double x, y;
@@ -122,8 +122,9 @@ void drawScore(int score) {
 }
 
 void drawFailMessage() {
-  HgSetColor(HG_WHITE);
-  HgText(180.0, 120.0, "FAIL");
+  HgWSetColor(lid2, HG_WHITE);
+  HgWSetFont(lid2, HG_GB, 24.0);
+  HgWText(lid2, 130.0, 220.0, "GAME OVER");
 }
 
 int hitWall(Rect *rect) {
@@ -193,100 +194,117 @@ int main() {
   HgWBoxFill(0, 0, 0, WIN_SIZE, WIN_SIZE, 0);
 
   doubleLayer layers = HgWAddDoubleLayer(0);
+  lid2 = HgWAddLayer(0);
 
   srandom(time(NULL));
 
   struct Pacman pac = {{0, 0, PAC_SIZE, PAC_SIZE}, PAC_STEP, 0.0, 0};
   struct Rect boxes[BOX_COUNT] = {};
 
-  // pacとboxの初期位置を決める
   while (1) {
-    pac.rect.x = randInt(0, 400);
-    pac.rect.y = randInt(0, 400);
+    // pacとboxの初期位置を決める
+    while (1) {
+      pac.rect.x = randInt(0, 400);
+      pac.rect.y = randInt(0, 400);
 
-    if (hitWall(&pac.rect)) {
-      continue;
-    }
+      if (hitWall(&pac.rect)) {
+        continue;
+      }
 
-    int boxHit = 0;
+      int boxHit = 0;
 
-    for (int i = 0; i < BOX_COUNT; i++) {
-      struct Rect box = {0, 0, 0, 0};
-
-      box.w = randInt(1, 2) * PAC_SIZE;
-      box.h = randInt(1, 2) * PAC_SIZE;
-      box.x = randInt(0, (int)(WIN_SIZE / PAC_SIZE)) * PAC_SIZE;
-      box.y = randInt(0, (int)(WIN_SIZE / PAC_SIZE)) * PAC_SIZE;
-
-      boxHit = rectHit(&box, &pac.rect);
-
-      if (boxHit) break;
-
-      boxes[i] = box;
-    }
-
-    if (!boxHit) {
-      break;
-    }
-  }
-
-  struct Rect ball = generateBall(boxes);
-
-  // メインループ
-  while (1) {
-    lid = HgLSwitch(&layers);
-    HgLClear(lid);
-
-    int hit = 0;
-
-    packKeyIn(&pac);
-    pacMove(&pac);
-
-    // pacを描画
-    pacDraw(&pac);
-
-    // boxを描画
-    for (int i = 0; i < BOX_COUNT; i++) {
-      drawBox(&boxes[i]);
-    }
-
-    // ballを描画
-    drawBall(&ball);
-    // drawBox(&ball);
-
-    // scoreを描画
-    drawScore(pac.score);
-
-    // 壁との当たり判定
-    if (hitWall(&pac.rect)) {
-      hit++;
-    } else {
-      // boxとの当たり判定
       for (int i = 0; i < BOX_COUNT; i++) {
-        if (rectHit(&boxes[i], &pac.rect)) {
-          hit++;
-          break;
-        }
+        struct Rect box = {0, 0, 0, 0};
+
+        box.w = randInt(1, 2) * PAC_SIZE;
+        box.h = randInt(1, 2) * PAC_SIZE;
+        box.x = randInt(0, (int)(WIN_SIZE / PAC_SIZE)) * PAC_SIZE;
+        box.y = randInt(0, (int)(WIN_SIZE / PAC_SIZE)) * PAC_SIZE;
+
+        boxHit = rectHit(&box, &pac.rect);
+
+        if (boxHit) break;
+
+        boxes[i] = box;
+      }
+
+      if (!boxHit) {
+        break;
       }
     }
 
-    // ballとの当たり判定
-    if (rectHit(&ball, &pac.rect)) {
-      pac.score += 1000;
-      ball = generateBall(boxes);
+    struct Rect ball = generateBall(boxes);
+
+    int frameCount = 0;
+
+    // メインループ
+    while (1) {
+      lid = HgLSwitch(&layers);
+
+      HgLClear(lid);
+      HgLClear(lid2);
+
+      int hit = 0;
+
+      packKeyIn(&pac);
+      pacMove(&pac);
+
+      // pacを描画
+      pacDraw(&pac);
+
+      // boxを描画
+      for (int i = 0; i < BOX_COUNT; i++) {
+        drawBox(&boxes[i]);
+      }
+
+      // ballを描画
+      drawBall(&ball);
+      // drawBox(&ball);
+
+      // scoreを描画
+      drawScore(pac.score);
+
+      if (frameCount == 1) {
+        HgWSetFont(lid2, HG_GB, 12.0);
+        HgWSetColor(lid2, HG_WHITE);
+        HgWText(lid2, 127.0, 200.0, "TYPE ANY KEY TO START");
+        HgGetChar();
+      }
+
+      // 壁との当たり判定
+      if (hitWall(&pac.rect)) {
+        hit++;
+      } else {
+        // boxとの当たり判定
+        for (int i = 0; i < BOX_COUNT; i++) {
+          if (rectHit(&boxes[i], &pac.rect)) {
+            hit++;
+            break;
+          }
+        }
+      }
+
+      // ballとの当たり判定
+      if (rectHit(&ball, &pac.rect)) {
+        pac.score += 1000;
+        ball = generateBall(boxes);
+      }
+
+      if (hit) {
+        drawFailMessage();
+        break;
+      }
+
+      HgSleep(0.05);
+      frameCount++;
     }
 
-    if (hit) {
-      drawFailMessage();
-      break;
-    }
-
-    HgSleep(0.05);
+    HgWSetColor(lid2, HG_WHITE);
+    HgWSetFont(lid2, HG_GB, 12.0);
+    HgWText(lid2, 127.0, 180.0, "TYPE ANY KEY TO RETRY");
+    HgSleep(0.5);
+    HgEvent();
   }
-
-  HgSetColor(HG_WHITE);
-  HgText(180.0, 160.0, "END");
-  HgGetChar();
 
   HgClose();
   return 0;
