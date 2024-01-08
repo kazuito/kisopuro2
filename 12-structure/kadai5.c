@@ -102,8 +102,8 @@ void pacDraw(Pacman * pac) {
 }
 
 void drawBox(Box *box) {
-  HgSetColor(HG_BLACK);
-  HgRect(box->x, box->y, box->w / 2, box->h / 2, 0);
+  HgSetFillColor(HG_GRAY);
+  HgRectFill(box->x, box->y, box->w / 2, box->h / 2, 0, 0);
 }
 
 void drawScore(int score) {
