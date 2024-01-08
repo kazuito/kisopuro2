@@ -128,8 +128,8 @@ void drawFailMessage() {
 }
 
 int hitWall(Rect *rect) {
-  if (((rect->x < rect->w) || (WIN_SIZE - rect->w < rect->x)) ||
-      ((rect->y < rect->h) || (WIN_SIZE - rect->h < rect->y))) {
+  if (((rect->x < 0) || (WIN_SIZE - rect->w < rect->x)) ||
+      ((rect->y < 0) || (WIN_SIZE - rect->h < rect->y))) {
     return 1;
   }
 
