@@ -126,6 +126,12 @@ void drawFailMessage() {
   HgWText(lid2, 130.0, 220.0, "GAME OVER");
 }
 
+void drawClearMessage() {
+  HgWSetColor(lid2, HG_GREEN);
+  HgWSetFont(lid2, HG_GB, 24.0);
+  HgWText(lid2, 130.0, 220.0, "GAME CLEAR");
+}
+
 int hitWall(Rect *rect) {
   if (((rect->x < 0) || (WIN_SIZE - rect->w < rect->x)) ||
       ((rect->y < 0) || (WIN_SIZE - rect->h < rect->y))) {
@@ -197,7 +203,7 @@ int main() {
 
   srandom(time(NULL));
 
-  struct Pacman pac = {{0, 0, PAC_SIZE, PAC_SIZE}, PAC_STEP, 0.0, 0, 1};
+  struct Pacman pac = {{0, 0, PAC_SIZE - 3, PAC_SIZE - 3}, PAC_STEP, 0.0, 0, 1};
   struct Rect boxes[BOX_COUNT] = {};
 
   while (1) {
@@ -299,6 +305,9 @@ int main() {
 
       if (hit) {
         drawFailMessage();
+        break;
+      } else if(pac.score > 10000) {
+        drawClearMessage();
         break;
       }
 
