@@ -13,6 +13,7 @@
 #define PENALTY 100
 
 int lid, lid2;
+int frameCount = 0;
 
 typedef struct Rect {
   double x, y;
@@ -75,7 +76,7 @@ void packKeyIn(Pacman *pac) {
 
   if (penalty > 0)
     pac->score -= penalty;
-  else
+  else if (frameCount > 0)
     pac->score += 3;
 }
 
@@ -235,7 +236,7 @@ int main() {
 
     struct Rect ball = generateBall(boxes);
 
-    int frameCount = 0;
+    frameCount = 0;
 
     // メインループ
     while (1) {
@@ -308,7 +309,7 @@ int main() {
     HgWSetColor(lid2, HG_WHITE);
     HgWSetFont(lid2, HG_GB, 12.0);
     HgWText(lid2, 127.0, 180.0, "TYPE ANY KEY TO RETRY");
-    HgSleep(0.0333);
+    HgSleep(0.5);
     HgEvent();
   }
 
