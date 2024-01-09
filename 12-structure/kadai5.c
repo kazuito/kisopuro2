@@ -1,4 +1,11 @@
-// level 7
+/* level 7
+
+ 加点：1フレームごとに +3点、黄色い玉を食べると +1000点 です。
+ 減点：曲がると -100点、引き返すと -1,000点。
+
+ 壁や障害物にぶつかるとゲームオーバー、
+ スコアが10,000点に達するとゲームクリアです。
+*/
 
 #include <handy.h>
 #include <math.h>
@@ -306,7 +313,7 @@ int main() {
       if (hit) {
         drawFailMessage();
         break;
-      } else if(pac.score > 10000) {
+      } else if (pac.score > 10000) {
         drawClearMessage();
         break;
       }
